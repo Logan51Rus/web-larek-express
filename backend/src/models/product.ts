@@ -24,6 +24,7 @@ const imageSchema = new mongoose.Schema<IImage>({
   },
 });
 
+// eslint-disable-next-line function-paren-newline
 const productSchema = new mongoose.Schema<IProduct>({
   title: {
     type: String,
@@ -49,6 +50,10 @@ const productSchema = new mongoose.Schema<IProduct>({
     required: false,
     default: null,
   },
-});
+},
+{
+  versionKey: false,
+},
+);
 
 export default mongoose.model<IProduct>('product', productSchema);

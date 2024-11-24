@@ -1,4 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
+import { Error as MongooseError } from 'mongoose';
+import BadRequestError from '../errors/bad-request-error';
 import Product from '../models/product';
 import ConflictError from '../errors/conflict-error';
 
@@ -14,11 +16,16 @@ export const addProduct = (req: Request, res: Response, next: NextFunction) => {
   } = req.body;
   return Product.create({
     title, image, category, description, price,
-  }).then((product) => res.send({ data: product })).catch((error) => {
-    if (error instanceof Error && error.message.includes('E11000')) {
-      return next(new ConflictError(`Товар с названием ${title} уже существует`));
-    }
+  }).then((product) => res.status(201).send({ data: product }))
+    .catch((error) => {
+      if (error instanceof Error && error.message.includes('E11000')) {
+        return next(new ConflictError(`Товар с названием ${title} уже существует`));
+      }
 
-    return next(new Error('Произошла ошибка при создании продукта'));
-  });
+      if (error instanceof MongooseError.ValidationError) {
+        return next(new BadRequestError('Переданы некорректные данные при создании продукта'));
+      }
+
+      return next(new Error('Произошла ошибка при добавлении продукта'));
+    });
 };

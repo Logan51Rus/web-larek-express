@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { Error as MongooseError } from 'mongoose';
 import { faker } from '@faker-js/faker';
 import Product from '../models/product';
 import BadRequestError from '../errors/bad-request-error';
@@ -25,6 +26,10 @@ const createOrder = async (req: Request, res: Response, next: NextFunction) => {
       total: totalPrice,
     });
   } catch (error) {
+    if (error instanceof MongooseError.ValidationError) {
+      return next(new BadRequestError('Переданы некорректные данные при создании заказа'));
+    }
+
     return next(new Error('Произошла ошибка при создании заказа'));
   }
 };

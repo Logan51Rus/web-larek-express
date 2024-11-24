@@ -1,16 +1,17 @@
-import { NextFunction, Request, Response } from 'express';
-import BadRequestError from '../errors/bad-request-error';
-import ConflictError from '../errors/conflict-error';
-import NotFoundError from '../errors/not-found-error';
+import {
+  ErrorRequestHandler, NextFunction, Request, Response,
+} from 'express';
 
-const errorHandler = (err: Error, _: Request, res: Response, _next: NextFunction) => {
-  // eslint-disable-next-line max-len
-  if (err instanceof BadRequestError || err instanceof ConflictError || err instanceof NotFoundError) {
-    return res.status(err.statusCode).json({
-      message: err.message,
-    });
-  }
-  return res.status(500).json({ message: 'Произошла ошибка со стороны сервера' });
+interface customError extends Error {
+  statusCode?: number
+}
+
+// eslint-disable-next-line max-len
+const errorHandler: ErrorRequestHandler = (err: customError, _: Request, res: Response, next: NextFunction) => {
+  const statusCode = err.statusCode || 500;
+  const message = statusCode === 500 ? 'На сервере произошла ошибка' : err.message;
+  res.status(statusCode).send({ message });
+  next();
 };
 
 export default errorHandler;
